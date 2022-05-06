@@ -39,7 +39,7 @@ def main():
     model.to(device)  # Set model to GPU
 
     lo = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.05)
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
 
     print("Start training")
     print("="*50)
@@ -49,7 +49,6 @@ def main():
         total = 0
         correct = 0
         for i, data in enumerate(trainLoader, 0):
-
             inputs, language, letter = data
             inputs = data[inputs].to(device)
             language = data[language].to(device)
@@ -59,9 +58,9 @@ def main():
             out = model(inputs)
 
             new_lang = []
-            for i in language:
+            for j in language:
                 curr = [0] * 3
-                curr[i] = 1
+                curr[j] = 1
                 new_lang.append(curr)
             # print(language, new_lang)
             new_lang = torch.Tensor(new_lang)
@@ -80,7 +79,7 @@ def main():
 
             if i % 200 == 199:
                 print(
-                    f'epoch {epoch} step {i} loss: {total_loss / 200:.2f} accuracy: {correct // total}%')
+                    f'epoch {epoch} step {i} loss: {total_loss / 200:.2f} accuracy: {correct  * 100 // total}%')
                 total_loss = 0
 
     print("Done Training")
