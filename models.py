@@ -26,7 +26,7 @@ class ASLModel(nn.Module):
         return x
 
 
-class Model(nn.Module):
+class LanguageModel(nn.Module):
     def __init__(self):
         super().__init__()
         self.c1 = nn.Conv2d(3, 32, kernel_size=(3, 3))

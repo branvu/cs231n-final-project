@@ -39,7 +39,8 @@ def crop_img(path):
     cnts = cnts[0] if len(cnts) == 2 else cnts[1]
     if len(cnts) != 1:
         cnts = cnts[-1:]
-        # print(len(cnts))
+
+        # display bounding boxes
         # for c in cnts:
         #     x, y, w, h = cv2.boundingRect(c)
         #     cv2.rectangle(img, (x, y), (x + w, y + h), (0, 0, 255), 2)
@@ -59,29 +60,14 @@ def crop_img(path):
     # crop image
     img = img[y:y+edge_length, x:x+edge_length]
 
-    # show img
-
-    # cv2.imshow("cropped", img)
-    # cv2.waitKey(0)
-
     return img
 
 
 def resize(w, h, img):
-    # print('Original Dimensions : ', img.shape)
-
     dim = (w, h)
 
     # resize image
     resized = cv2.resize(img, dim, interpolation=cv2.INTER_AREA)
-
-    # print('Resized Dimensions : ', resized.shape)
-
-    # show img
-
-    # cv2.imshow("Resized image", resized)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
     return resized
 
 
@@ -99,9 +85,6 @@ def statistics(path):
 
 def grayscale(img):
     img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-    # cv2.imshow("Resized image", img_gray)
-    # cv2.waitKey(0)
     return img_gray
 
 
@@ -121,9 +104,6 @@ def parse_images(path):
         if counter[label] < (TOTAL_WANTED // NUM_LABELS) + 1 and label not in EXCLUDED_LABELS:
             img = grayscale(
                 resize(FINAL_IMAGE_SIZE, FINAL_IMAGE_SIZE, crop_img(IMG_ORIGIN_FOLDER + "\\" + img_name)))
-
-            # cv2.imshow("image", img)
-            # cv2.waitKey(0)
 
             imgs.append(img)
             labels.append(ord(label) - ord('A'))
