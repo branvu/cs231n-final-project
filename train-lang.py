@@ -22,7 +22,7 @@ def main():
     dataset = SignLanguageDataset("annotations.csv", None)
     size = len(dataset)
     splits = [int(size * 0.80), int(size * 0.10), int(size * 0.10) + 1]
-    print(sum(splits), splits, size)
+    print("splits", sum(splits), splits, size)
     train_set, val_set, test_set = torch.utils.data.random_split(
         dataset, splits)
 
@@ -42,7 +42,7 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
     print("Start training")
-    print("="*50)
+    print("="*50, "\n")
 
     for epoch in range(epochs):
         total_loss = 0
