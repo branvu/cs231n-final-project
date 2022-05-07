@@ -8,8 +8,6 @@ THIS FILE IS FOR ISL DATA PROCESSING
 
 import random
 import cv2
-import numpy as np
-import csv
 from collections import defaultdict
 import os
 

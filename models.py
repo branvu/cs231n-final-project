@@ -2,6 +2,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch
 
+
 class ASLModel(nn.Module):
     def __init__(self):
         super().__init__()
@@ -9,7 +10,7 @@ class ASLModel(nn.Module):
         self.pool = nn.MaxPool2d(2, 2)
         self.c2 = nn.Conv2d(32, 16, kernel_size=(5, 5))
         self.linear1 = nn.Linear(1296, 100)
-        self.linear2 = nn.Linear(100, 24)
+        self.linear2 = nn.Linear(100, 26)
         self.drop = nn.Dropout(p=0.2)
 
     def forward(self, x):
@@ -23,6 +24,7 @@ class ASLModel(nn.Module):
         x = F.relu(self.linear1(x))
         x = self.linear2(x)
         return x
+
 
 class Model(nn.Module):
     def __init__(self):

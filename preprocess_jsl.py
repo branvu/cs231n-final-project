@@ -4,11 +4,7 @@ THIS FILE IS FOR JSL DATA PROCESSING
 - save image to specified folder with name format
 '''
 
-import random
-from typing import Final
 import cv2
-import numpy as np
-import csv
 from collections import defaultdict
 import os
 

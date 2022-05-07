@@ -17,9 +17,9 @@ def main():
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
     batch_size = 10
-    epochs = 1
+    epochs = 5
 
-    dataset = SignLanguageDataset("annotations-asl.csv", None)
+    dataset = SignLanguageDataset("asl_annotations.csv", None)
     size = len(dataset)
     splits = [int(size * 0.80), int(size * 0.10), int(size * 0.10) + 1]
     print(sum(splits), splits, size)
@@ -39,7 +39,7 @@ def main():
     model.to(device)  # Set model to GPU
 
     lo = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    optimizer = optim.Adam(model.parameters(), lr=0.0001)
 
     print("Start training")
     print("="*50, "\n")
@@ -56,7 +56,7 @@ def main():
 
             optimizer.zero_grad()
             out = model(inputs)
-            letter = int(str(letter)[1:])
+
             # language [0, 0, 1]
             # language [[1, 0, 0], [1, 0, 0], [0, 1, 0]]
             loss = lo(out, letter)  # Loss with respect to the
@@ -65,8 +65,9 @@ def main():
             total_loss += loss.item()
 
             _, label = torch.max(out.data, 1)
-            total += language.size(0)
-            correct_occurences = (label == language)
+            total += letter.size(0)
+            correct_occurences = (label == letter)
+            # print(label, letter, correct_occurences)
             correct += correct_occurences.sum().item()
 
             if i % 200 == 199:
