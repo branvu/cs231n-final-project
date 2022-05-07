@@ -1,5 +1,3 @@
-from tabnanny import check
-from tkinter.filedialog import test
 from torch.utils.data import DataLoader
 import torch
 import torch.nn as nn
@@ -9,9 +7,12 @@ from matplotlib import pyplot as plt
 from mydata import SignLanguageDataset
 from models import LanguageModel
 
+'''
+MODIFY CONSTANTS AS NEEDED
+'''
 BATCH_SIZE = 10
 EPOCHS = 1
-ANNOTATIONS = "annotations.csv"
+ANNOTATIONS = "annotations/annotations.csv"
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 trainLoader, valLoader, testLoaer = None, None, None
@@ -133,7 +134,7 @@ transform = T.Compose([
     print("Start training")
     print("="*50, "\n")
 
-    train(model, optimizer)
+    train(model, optimizer, epochs=EPOCHS)
 
     print("Test accuracy:")
     print("="*50)

@@ -20,7 +20,7 @@ DATA_FOLDER = "data"  # should exist
 SAVE_DIR = "isl"  # should NOT exist
 
 # where images are initially located, usually a temp folder
-IMG_ORIGIN_FOLDER = "Person1"
+IMG_ORIGIN_FOLDER = "data/isl_original_data"
 
 
 def crop_img(path):
@@ -131,6 +131,30 @@ def parse_images(path):
 
     assert counter['J'] == 0 and counter['Z'] == 0
     return imgs, labels
+
+
+def show_image_progress():
+    # display and save image showing preprocessing steps
+    path = "data\isl_original_data\Person1-K-1-13.jpg"
+    img = cv2.imread(path)
+    cv2.imwrite("unedited.jpg", img)
+    cv2.imshow("unedited", img)
+    cv2.waitKey(0)
+
+    img = crop_img(path)
+    cv2.imwrite("cropped.jpg", img)
+    cv2.imshow("cropped", img)
+    cv2.waitKey(0)
+
+    img = resize(FINAL_IMAGE_SIZE, FINAL_IMAGE_SIZE, img)
+    cv2.imwrite("resized.jpg", img)
+    cv2.imshow("resized", img)
+    cv2.waitKey(0)
+
+    img = grayscale(img)
+    cv2.imwrite("gray.jpg", img)
+    cv2.imshow("gray", img)
+    cv2.waitKey(0)
 
 
 def main():

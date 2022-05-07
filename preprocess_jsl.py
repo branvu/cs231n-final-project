@@ -14,7 +14,7 @@ TOTAL_WANTED = 8055
 DATA_FOLDER = "data"  # should exist
 SAVE_DIR = "jsl"  # should NOT exist
 
-IMG_ORIGIN_FOLDER = "jsl"
+IMG_ORIGIN_FOLDER = "data/jsl_original_data"
 
 
 def resize(w, h, img):
@@ -84,7 +84,8 @@ def main():
 
     for i in range(len(images)):
         img = images[i]
-        cv2.imwrite("jsl-" + str(labels[i]) + "-" + str(i) + ".jpg", img)
+        # offset of 1 on label bc not 0 indexed
+        cv2.imwrite("jsl-" + str(labels[i] - 1) + "-" + str(i) + ".jpg", img)
 
         if i % 100 == 0:
             print("image:", i)
