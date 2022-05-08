@@ -13,7 +13,7 @@ import os
 MODIFY CONSTANTS AS NEEDED
 '''
 BATCH_SIZE = 10
-EPOCHS = 5
+EPOCHS = 1
 ANNOTATIONS_DIR = "annotations"
 NUM_CLASSES = {"asl": 26, "isl": 26, "jsl": 41}
 
@@ -37,8 +37,8 @@ def setup():
     # Read in dataset from annotations file
     dataset = SignLanguageDataset(ANNOTATIONS, None)
     size = len(dataset)
-    splits = [int(size * 0.80), int(size * 0.10), int(size * 0.10) + 1]
-    print(f"Splits: {splits}, Data size: {size}")
+    splits = [round(size * 0.80) - 1, round(size * 0.10), round(size * 0.10)]
+    print(f"Splits: {splits}, Sum of splits: {sum(splits)}, Data size: {size}")
 
     assert size == sum(splits)
 
@@ -47,11 +47,11 @@ def setup():
 
     # create DataLoaders
     trainLoader = DataLoader(
-        train_set, batch_size=BATCH_SIZE, shuffle=True, num_workers=2)
+        train_set, batch_size=BATCH_SIZE, shuffle=True, num_workers=0)
     valLoader = DataLoader(
-        val_set, batch_size=BATCH_SIZE, shuffle=True, num_workers=2)
+        val_set, batch_size=BATCH_SIZE, shuffle=True, num_workers=0)
     testLoader = DataLoader(
-        test_set, batch_size=BATCH_SIZE, shuffle=True, num_workers=2)
+        test_set, batch_size=BATCH_SIZE, shuffle=True, num_workers=0)
 
 
 def train(model, optimizer, epochs=1):
@@ -64,18 +64,9 @@ def train(model, optimizer, epochs=1):
 
             # move to device (GPU)
             inputs, language, letter = data
-            inputs = data[inputs].to(device)
+
+            inputs = data[inputs][:, :, :, None].to(device)
             language = data[language].to(device)
-
-            # letter = data[letter]
-
-            # print(type(letter), letter)
-            # new_letter = []
-            # if args.lang != "asl":
-            #     for j in letter:
-            #         new_letter.append(j.item() % 100)
-            #     # letter = letter[1:]
-            #     letter = new_letter
             letter = data[letter].to(device)
 
             # zero out gradients
@@ -107,9 +98,8 @@ def check_accuracy(loader, model):
     with torch.no_grad():
         for data in loader:
             # move to device
-            inputs, language, letter = data
-            inputs = data[inputs].to(device)
-            language = data[language].to(device)
+            inputs, _, letter = data
+            inputs = data[inputs][:, :, :, None].to(device)
             letter = data[letter].to(device)
 
             out = model(inputs)

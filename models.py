@@ -6,7 +6,7 @@ import torch
 class ASLModel(nn.Module):
     def __init__(self):
         super().__init__()
-        self.c1 = nn.Conv2d(3, 32, kernel_size=(3, 3))
+        self.c1 = nn.Conv2d(1, 32, kernel_size=(3, 3))
         self.pool = nn.MaxPool2d(2, 2)
         self.c2 = nn.Conv2d(32, 16, kernel_size=(5, 5))
         self.linear1 = nn.Linear(1296, 100)
@@ -29,7 +29,7 @@ class ASLModel(nn.Module):
 class JSLModel(nn.Module):
     def __init__(self):
         super().__init__()
-        self.c1 = nn.Conv2d(3, 32, kernel_size=(3, 3))
+        self.c1 = nn.Conv2d(1, 32, kernel_size=(3, 3))
         self.pool = nn.MaxPool2d(2, 2)
         self.c2 = nn.Conv2d(32, 16, kernel_size=(5, 5))
         self.linear1 = nn.Linear(1296, 100)
@@ -52,7 +52,7 @@ class JSLModel(nn.Module):
 class ISLModel(nn.Module):
     def __init__(self):
         super().__init__()
-        self.c1 = nn.Conv2d(3, 32, kernel_size=(3, 3))
+        self.c1 = nn.Conv2d(1, 32, kernel_size=(3, 3))
         self.pool = nn.MaxPool2d(2, 2)
         self.c2 = nn.Conv2d(32, 16, kernel_size=(5, 5))
         self.linear1 = nn.Linear(1296, 100)
@@ -75,7 +75,7 @@ class ISLModel(nn.Module):
 class ARSLModel(nn.Module):
     def __init__(self):
         super().__init__()
-        self.c1 = nn.Conv2d(3, 32, kernel_size=(3, 3))
+        self.c1 = nn.Conv2d(1, 32, kernel_size=(3, 3))
         self.pool = nn.MaxPool2d(2, 2)
         self.c2 = nn.Conv2d(32, 16, kernel_size=(5, 5))
         self.linear1 = nn.Linear(1296, 100)
@@ -96,13 +96,13 @@ class ARSLModel(nn.Module):
 
 
 class LanguageModel(nn.Module):
-    def __init__(self):
+    def __init__(self, num_langs):
         super().__init__()
-        self.c1 = nn.Conv2d(3, 32, kernel_size=(3, 3))
+        self.c1 = nn.Conv2d(1, 32, kernel_size=(3, 3))
         self.pool = nn.MaxPool2d(2, 2)
         self.c2 = nn.Conv2d(32, 16, kernel_size=(5, 5))
         self.linear1 = nn.Linear(1296, 100)
-        self.linear2 = nn.Linear(100, 3)
+        self.linear2 = nn.Linear(100, num_langs)
 
     def forward(self, x):
         x = x.float()

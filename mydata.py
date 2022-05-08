@@ -16,7 +16,7 @@ class SignLanguageDataset(Dataset):
         # print("get item", idx)
         if torch.is_tensor(idx):
             idx = idx.tolist()
-        img = cv2.imread(self.data.iloc[idx, 0])
+        img = cv2.imread(self.data.iloc[idx, 0], cv2.IMREAD_GRAYSCALE)
         classifications = np.array(self.data.iloc[idx, 1:])
         sample = {'image': img, 'language': int(
             classifications[0]), 'letter': int(classifications[1])}

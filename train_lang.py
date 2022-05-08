@@ -12,6 +12,7 @@ MODIFY CONSTANTS AS NEEDED
 '''
 BATCH_SIZE = 10
 EPOCHS = 1
+NUM_LANGS = 4
 ANNOTATIONS = "annotations/annotations.csv"
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -24,8 +25,8 @@ def setup():
     # Read in dataset from annotations file
     dataset = SignLanguageDataset(ANNOTATIONS, None)
     size = len(dataset)
-    splits = [int(size * 0.80), int(size * 0.10), int(size * 0.10) + 1]
-    print(f"Splits: {splits}, Data size: {size}")
+    splits = [round(size * 0.80), round(size * 0.10), round(size * 0.10)]
+    print(f"Splits: {splits}, Sum of splits: {sum(splits)}, Data size: {size}")
 
     assert size == sum(splits)
 
@@ -51,7 +52,7 @@ def train(model, optimizer, epochs=1):
 
             # move to device (GPU)
             inputs, language, letter = data
-            inputs = data[inputs].to(device)
+            inputs = data[inputs][:, :, :, None].to(device)
             language = data[language].to(device)
             letter = data[letter].to(device)
 
@@ -64,7 +65,7 @@ def train(model, optimizer, epochs=1):
             # new_lang: [[1, 0, 0], [1, 0, 0], [0, 1, 0]]
             new_lang = []
             for j in language:
-                curr = [0] * 3
+                curr = [0] * NUM_LANGS
                 curr[j] = 1
                 new_lang.append(curr)
             new_lang = torch.Tensor(new_lang)
@@ -95,10 +96,9 @@ def check_accuracy(loader, model):
     with torch.no_grad():
         for data in loader:
             # move to device
-            inputs, language, letter = data
-            inputs = data[inputs].to(device)
+            inputs, language, _ = data
+            inputs = data[inputs][:, :, :, None].to(device)
             language = data[language].to(device)
-            letter = data[letter].to(device)
 
             out = model(inputs)
             _, predicted = torch.max(out.data, 1)
@@ -128,7 +128,7 @@ transform = T.Compose([
     setup()
 
     # create model
-    model = LanguageModel()
+    model = LanguageModel(NUM_LANGS)
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
     print("Start training")
