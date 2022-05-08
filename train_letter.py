@@ -6,14 +6,14 @@ import torch.optim as optim
 import numpy as np
 from matplotlib import pyplot as plt
 from mydata import SignLanguageDataset
-from models import ASLModel, JSLModel, ISLModel
+from models import ARSLModel, ASLModel, JSLModel, ISLModel
 import os
 
 '''
 MODIFY CONSTANTS AS NEEDED
 '''
 BATCH_SIZE = 10
-EPOCHS = 3
+EPOCHS = 5
 ANNOTATIONS_DIR = "annotations"
 NUM_CLASSES = {"asl": 26, "isl": 26, "jsl": 41}
 
@@ -148,6 +148,8 @@ transform = T.Compose([
         model = JSLModel()
     elif args.lang == "isl":
         model = ISLModel()
+    elif args.lang == "arsl":
+        model = ARSLModel()
     else:
         raise Exception(f"Invalid language {args.lang}")
     optimizer = optim.Adam(model.parameters(), lr=0.0001)

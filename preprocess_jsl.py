@@ -2,28 +2,30 @@
 THIS FILE IS FOR JSL DATA PROCESSING
 - get 8055 images from folder with uniform distribution
 - save image to specified folder with name format
+- preprocess with cropping, resizing, and grascaling
 '''
 
 import cv2
 from collections import defaultdict
 import os
+from preprocess_functions import *
+import argparse
 
-FINAL_IMAGE_SIZE = 28
 NUM_LABELS = 41
-TOTAL_WANTED = 8055
 DATA_FOLDER = "data"  # should exist
 SAVE_DIR = "jsl"  # should NOT exist
+MARGIN = 5
 
 IMG_ORIGIN_FOLDER = "data/jsl_original_data"
 
-
-def resize(w, h, img):
-    dim = (w, h)
-
-    # resize image
-    resized = cv2.resize(img, dim, interpolation=cv2.INTER_AREA)
-
-    return resized
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "show", help="Show images (y/N)", nargs='?', const='y')
+parser.add_argument(
+    "show_crop", help="Show cropping of images (y/N)", nargs='?', const='y')
+parser.add_argument(
+    "show_bounding", help="Show bounding boxes of images (y/N)", nargs='?', const='y')
+args = parser.parse_args()
 
 
 def statistics(path):
@@ -34,18 +36,13 @@ def statistics(path):
     for file in files:
         counter[file[9:11]] += 1
 
-    print(counter)
+    dic = [{x: counter[x]} for x in sorted(counter)]
+    print(dic)
     print("Total:", sum([counter[x] for x in counter]))
 
 
-def grayscale(img):
-    img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-    return img_gray
-
-
-def parse_images(path):
-    images = os.listdir(IMG_ORIGIN_FOLDER)
+def parse_images(path, show=False, show_crop=False, show_bounding=False):
+    images = os.listdir(path)
 
     imgs = []
     labels = []
@@ -58,10 +55,13 @@ def parse_images(path):
 
         assert img.shape[0] == img.shape[1]
 
-        img = grayscale(resize(FINAL_IMAGE_SIZE, FINAL_IMAGE_SIZE, img))
+        img = grayscale(
+            resize(FINAL_IMAGE_SIZE, FINAL_IMAGE_SIZE, crop_img(img, MARGIN, show_crop, show_bounding)))
 
-        # cv2.imshow("image", img)
-        # cv2.waitKey(0)
+        if show:
+            cv2.imshow("image", img)
+            cv2.waitKey(0)
+
         assert img.shape == (28, 28)
 
         imgs.append(img)
@@ -71,8 +71,15 @@ def parse_images(path):
 
 
 def main():
+    # show statistics and distribution of letters
     statistics(IMG_ORIGIN_FOLDER)
-    images, labels = parse_images(IMG_ORIGIN_FOLDER)
+
+    show = True if args.show is not None and args.show.lower() == 'y' else False
+    show_crop = True if args.show_crop is not None and args.show_crop.lower() == 'y' else False
+    show_bounding = True if args.show_bounding is not None and args.show_bounding.lower() == 'y' else False
+
+    images, labels = parse_images(
+        IMG_ORIGIN_FOLDER, show, show_crop, show_bounding)
 
     # move and create directories
     assert os.path.isdir(DATA_FOLDER)

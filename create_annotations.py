@@ -15,7 +15,8 @@ UPDATE THESE CONSTANTS AS NEEDED
 ANNOTATIONS_DIR = "annotations/"
 ANNOTATIONS_FILE = "annotations.csv"
 LANGUAGE_INFO = {"asl": ("data/asl", ANNOTATIONS_DIR + "asl_annotations.csv", "0"), "jsl": ("data/jsl", ANNOTATIONS_DIR + "jsl_annotations.csv", "1"), "isl": (
-    "data/isl", ANNOTATIONS_DIR + "isl_annotations.csv", "2")}
+    "data/isl", ANNOTATIONS_DIR + "isl_annotations.csv", "2"), "arsl": (
+    "data/arsl", ANNOTATIONS_DIR + "arsl_annotations.csv", "3")}
 
 available_langs = [lang for lang in LANGUAGE_INFO]
 
@@ -50,7 +51,8 @@ def main():
         for lang in LANGUAGE_INFO:
             generate(lang)
     elif args.lang in available_langs:
-        if ANNOTATIONS_FILE not in os.listdir():
+        if ANNOTATIONS_FILE not in os.listdir(ANNOTATIONS_DIR):
+            print("Created annotations file")
             df = pd.DataFrame(columns=["image", "language", "letter"])
             df.to_csv(ANNOTATIONS_DIR + ANNOTATIONS_FILE, index=False)
         generate(args.lang)

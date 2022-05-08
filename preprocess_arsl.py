@@ -1,26 +1,27 @@
 '''
-THIS FILE IS FOR ISL DATA PROCESSING
+THIS FILE IS FOR ARSL DATA PROCESSING
 - get 8055 images from folder with uniform distribution
 - preprocess with cropping, resizing, and grascaling
 - save image to specified folder
-- exclude J and Z as they are not static signs
 '''
 
+from cProfile import label
 import random
 import cv2
 from collections import defaultdict
 import os
 from preprocess_functions import *
 import argparse
+import pandas as pd
 
-NUM_LABELS = 24
-EXCLUDED_LABELS = {"J", "Z"}
+NUM_LABELS = 32
 DATA_FOLDER = "data"  # should exist
-SAVE_DIR = "isl"  # should NOT exist
-MARGIN = 1
+SAVE_DIR = "arsl"  # should NOT exist
+MARGIN = 3
+LABEL_MAP, LABELS = None, None
 
 # where images are initially located, usually a temp folder
-IMG_ORIGIN_FOLDER = "data/isl_original_data"
+IMG_ORIGIN_FOLDER = "data/arsl_original_data"
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -33,35 +34,53 @@ args = parser.parse_args()
 
 
 def statistics(path):
-    # get distribution of each label in original folder
+    global LABELS, LABEL_MAP
 
-    files = os.listdir(path)
+    # get distribution of each label in original folder
+    LABELS = os.listdir(path)
+
+    LABEL_MAP = {LABELS[x]: x for x in range(len(LABELS))}
     counter = defaultdict(int)
 
-    for file in files:
-        counter[file[8]] += 1
+    for folder in LABELS:
+        num = len(os.listdir(path + "/" + folder))
+        counter[LABEL_MAP[folder]] = num
     dic = [{x: counter[x]} for x in sorted(counter)]
+
     print(dic)
     print("Total:", sum([counter[x] for x in counter]))
 
+    # ensure labels are correct
+    df = pd.read_csv("ArSL_Data_Labels.csv")
+    classes = set(df['Class'])
+    assert len(classes) == NUM_LABELS
+
+    LABELS = set(LABELS)
+    assert len(LABELS) == NUM_LABELS
+
+    assert len(classes.difference(LABELS)) == 0
+
 
 def parse_images(path, show=False, show_crop=False, show_bounding=False):
-    images = os.listdir(path)
+    folders = os.listdir(path)
 
     counter = defaultdict(int)
 
     imgs = []
     labels = []
-    unused_idxs = set()
-    used_idxs = set()
 
-    for i in range(len(images)):
-        img_name = images[i]
-        label = img_name[8]
-        if counter[label] < (TOTAL_WANTED // NUM_LABELS) + 1 and label not in EXCLUDED_LABELS:
-            img = cv2.imread(IMG_ORIGIN_FOLDER + "\\" + img_name)
-            img = grayscale(
-                resize(FINAL_IMAGE_SIZE, FINAL_IMAGE_SIZE, crop_img(img, MARGIN, show_crop, show_bounding)))
+    # go through the folders for each letter
+    for folder in folders:
+        images = os.listdir(path + "/" + folder)
+
+        # get images for each label
+        for i in range(TOTAL_WANTED // NUM_LABELS + 1):
+            img_name = images[i]
+            label = LABEL_MAP[folder]
+
+            img = cv2.imread(path + "/" + folder + "/" + img_name)
+            img = grayscale(resize(FINAL_IMAGE_SIZE, FINAL_IMAGE_SIZE, crop_img(
+                img, MARGIN, show_crop, show_bounding)))
 
             imgs.append(img)
 
@@ -71,38 +90,15 @@ def parse_images(path, show=False, show_crop=False, show_bounding=False):
 
             assert img.shape == (28, 28)
 
-            labels.append(ord(label) - ord('A'))
+            labels.append(label)
             counter[label] += 1
 
-            assert i not in used_idxs
-            used_idxs.add(i)
+    for _ in range(len(imgs) - TOTAL_WANTED):
+        idx = random.randint(0, len(imgs) - 1)
+        imgs = imgs[:idx] + imgs[idx + 1:]
+        labels = labels[:idx] + labels[idx + 1:]
+        counter[label] -= 1
 
-        elif label not in EXCLUDED_LABELS:
-            unused_idxs.add(i)
-
-    for _ in range(TOTAL_WANTED - len(imgs)):
-        idx = random.choice(tuple(unused_idxs))
-        assert idx not in used_idxs
-        used_idxs.add(idx)
-
-        img_name = images[idx]
-        label = img_name[8]
-        img = cv2.imread(IMG_ORIGIN_FOLDER + "\\" + img_name)
-        img = grayscale(resize(FINAL_IMAGE_SIZE, FINAL_IMAGE_SIZE,
-                               crop_img(img, 1)))
-        imgs.append(img)
-
-        if show:
-            cv2.imshow("image", img)
-            cv2.waitKey(0)
-
-        assert img.shape == (28, 28)
-
-        labels.append(ord(label) - ord('A'))
-        counter[label] += 1
-        unused_idxs.remove(idx)
-
-    assert counter['J'] == 0 and counter['Z'] == 0
     return imgs, labels
 
 
@@ -127,7 +123,8 @@ def main():
 
     for i in range(len(images)):
         img = images[i]
-        cv2.imwrite("isl-" + str(labels[i]) + "-" + str(i) + ".jpg", img)
+        cv2.imwrite(SAVE_DIR + "-" +
+                    str(labels[i]) + "-" + str(i) + ".jpg", img)
 
         if i % 100 == 0:
             print("image:", i)

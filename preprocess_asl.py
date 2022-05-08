@@ -4,6 +4,7 @@ THIS FILE IS FOR ASL DATASET PROCESSING
 - get 8055 images with uniform distribution over letters
 - save as .jpg file in folder specified
 - exclude J and Z as they are not static signs
+- original data is 28x28 and grayscale
 '''
 
 import random
@@ -12,17 +13,31 @@ import numpy as np
 import csv
 from collections import defaultdict
 import os
-
-from preprocess_isl import IMG_ORIGIN_FOLDER
+from preprocess_functions import *
+import argparse
+import pandas as pd
+from collections import Counter
 
 NUM_LABELS = 24  # doesn't contain J and Z datapoints in original csv file
-TOTAL_WANTED = 8055
 DATA_FOLDER = "data"  # should exist
 SAVE_DIR = "asl"  # should NOT exist
-IMG_ORIGIN_FOLDER = "sign_mnist_train.csv"
+IMG_ORIGIN_FOLDER = "data/sign_mnist_train.csv"
+
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "show", help="Show images (y/N)", nargs='?', const='y')
+args = parser.parse_args()
 
 
-def parse_data_from_input(filename):
+def statistics(filename):
+    df = pd.read_csv(filename)
+    labels = df['label']
+    counter = Counter(labels)
+    dic = [{x: counter[x]} for x in sorted(counter)]
+    print(dic)
+
+
+def parse_data_from_input(filename, show=False):
     counts = defaultdict(int)
 
     with open(filename) as file:
@@ -34,9 +49,18 @@ def parse_data_from_input(filename):
             label = row[0]
             if counts[label] < (TOTAL_WANTED // NUM_LABELS) + 1:
                 data = row[1:]
-                img = np.array(data).reshape((28, 28))
+                img = np.asarray(data, dtype=float).reshape((28, 28))
+                img = img.astype(np.uint8)
 
+                # image already grayscale and centered
                 imgs.append(img)
+
+                if show:
+                    cv2.imshow("image", img)
+                    cv2.waitKey(0)
+
+                assert img.shape == (28, 28)
+
                 labels.append(label)
                 counts[label] += 1
 
@@ -51,7 +75,10 @@ def parse_data_from_input(filename):
 
 
 def main():
-    images, labels = parse_data_from_input(IMG_ORIGIN_FOLDER)
+    statistics(IMG_ORIGIN_FOLDER)
+
+    show = True if args.show is not None and args.show.lower() == 'y' else False
+    images, labels = parse_data_from_input(IMG_ORIGIN_FOLDER, show)
 
     # move and create directories
     assert os.path.isdir(DATA_FOLDER)
@@ -68,6 +95,8 @@ def main():
 
         if i % 100 == 0:
             print("image:", i)
+
+    print(f"Completed {len(images)} images")
 
 
 if __name__ == "__main__":
