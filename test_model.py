@@ -62,7 +62,7 @@ def main():
     checkpoint = torch.load(MODEL_SAVE_PATH)
     model.load_state_dict(checkpoint)
     model.to(device)
-    check_accuracy(images, model, False)
+    check_accuracy(images, model, True)
 
 
 if __name__ == "__main__":
