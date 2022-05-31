@@ -13,7 +13,7 @@ import os
 MODIFY CONSTANTS AS NEEDED
 '''
 BATCH_SIZE = 10
-EPOCHS = 1
+EPOCHS = 3
 ANNOTATIONS_DIR = "annotations"
 NUM_CLASSES = {"asl": 26, "isl": 26, "jsl": 41}
 

@@ -40,7 +40,6 @@ def check_accuracy(images, model, verbose=False):
             label = torch.tensor([orig_label])
 
             letter = label.to(device)
-
             out = model(input)
             _, predicted = torch.max(out.data, 1)
 
@@ -62,7 +61,7 @@ def main():
     checkpoint = torch.load(MODEL_SAVE_PATH)
     model.load_state_dict(checkpoint)
     model.to(device)
-    check_accuracy(images, model, True)
+    check_accuracy(images, model, False)
 
 
 if __name__ == "__main__":

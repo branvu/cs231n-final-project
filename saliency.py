@@ -17,14 +17,12 @@ plt.rcParams['image.cmap'] = 'gray'
 
 
 def preprocess(img, size=28):
-    print(img)
     transform = T.Compose([
         T.Resize(size),
         T.ToTensor(),
-        T.Lambda(lambda x: x[None]),
+        T.Lambda(lambda x: x[:, :, :, None]),
     ])
     img = transform(img)
-    print(img.shape)
     return img
 
 
@@ -58,21 +56,37 @@ def compute_saliency_maps(X, y, model):
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
     # forward pass
-    scores = model(X)
-    # print(scores.shape) # torch.Size([5, 1000]) since 5 images, 1000 classes
-    scores = (scores.gather(1, y.view(-1, 1)).squeeze())
-    # print(scores.shape) # torch.Size([5])
+    # X = X.to(device)
+    # scores = model(X)
+    # print(scores)
+    # # print(scores.shape) # torch.Size([5, 1000]) since 5 images, 1000 classes
+    # scores = (scores.gather(1, y.view(-1, 1)).squeeze())
+    # print(scores)
+    # # print(scores.shape) # torch.Size([5])
 
-    # print(scores) #tensor([24.1313, 25.1475, 38.8825, 25.4514, 30.2723], grad_fn=<SqueezeBackward0>)
+    # # print(scores) #tensor([24.1313, 25.1475, 38.8825, 25.4514, 30.2723], grad_fn=<SqueezeBackward0>)
 
-    # backward pass
-    # https://stackoverflow.com/questions/43451125/pytorch-what-are-the-gradient-arguments
-    # print(scores.shape[0]) # 5
-    # print(torch.FloatTensor([1.0]*scores.shape[0])) # tensor([1., 1., 1., 1., 1.])
-    scores.backward(torch.FloatTensor([1.0]*scores.shape[0]))
+    # # backward pass
+    # # https://stackoverflow.com/questions/43451125/pytorch-what-are-the-gradient-arguments
+    # # print(scores.shape[0]) # 5
+    # # print(torch.FloatTensor([1.0]*scores.shape[0])) # tensor([1., 1., 1., 1., 1.])
+    # scores.backward(torch.FloatTensor([1.0]*scores.shape[0]))
 
-    # saliency
-    saliency, _ = torch.max(X.grad.data.abs(), dim=1)
+    # print(X.grad.data.abs().shape)
+    # # saliency
+    # saliency, _ = torch.max(X.grad.data.abs(), dim=3)
+
+    x = model(X)
+    print(x)
+    correct_vals = x.gather(1, y.view(-1, 1)).squeeze()
+    print(correct_vals)
+    correct_vals = correct_vals.sum()
+    correct_vals = correct_vals.backward()
+    gradient = X.grad
+    gradient = torch.abs(gradient)
+    saliency, indices = torch.max(gradient, 3)
+
+    print(saliency.shape)
 
     # torch.max(input, dim, keepdim=False, out=None) -> (Tensor, LongTensor)
 
@@ -94,6 +108,9 @@ def show_saliency_maps(X, y):
     X_tensor = torch.cat([preprocess(Image.fromarray(x)) for x in X], dim=0)
     y_tensor = torch.LongTensor(y)
 
+    # X_tensor = X_tensor.to(device)
+    # y_tensor = y_tensor.to(device)
+
     # Compute saliency maps for images in X
     saliency = compute_saliency_maps(X_tensor, y_tensor, model)
 
@@ -101,31 +118,35 @@ def show_saliency_maps(X, y):
     # and saliency maps together.
     saliency = saliency.numpy()
     N = X.shape[0]
+    print(N)
     for i in range(N):
         plt.subplot(2, N, i + 1)
-        plt.imshow(X[i])
+        plt.imshow(resize(100, 100, X[i]))
         plt.axis('off')
         plt.title(y[i])
         plt.subplot(2, N, N + i + 1)
         plt.imshow(saliency[i], cmap=plt.cm.hot)
+        # print(saliency[i])
         plt.axis('off')
         plt.gcf().set_size_inches(12, 5)
+        # break
     plt.show()
 
 
 MODEL_SAVE_PATH = "models/model_basic_asl_letter.pth"
-DATA_PATH = "data/test_data/asl_alphabet_train"
+DATA_PATH = "data/asl"
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 model = ASLModel()
 checkpoint = torch.load(MODEL_SAVE_PATH)
 model.load_state_dict(checkpoint)
-model.to(device)
+# model.to(device)
 
 
 def get_data():
     images_list = os.listdir(DATA_PATH)
-    images = random.sample(images_list, 200)
+    images = random.sample(images_list, 5)
+    # images = images_list[6000:6000+5]
     y = []
     X = []
     for i in images:
@@ -133,9 +154,12 @@ def get_data():
         img = grayscale(
             resize(FINAL_IMAGE_SIZE, FINAL_IMAGE_SIZE, orig_img))
         # img = img[None, :, :, None]
-        print(img)
+        # print(img)
         X.append(np.array(img))
-        y.append(ord(i[0]) - ord('A'))
+        y.append(int(i[4]))
+    X = np.array(X)
+    y = np.array(y)
+    print(y)
     return X, y
 
 
