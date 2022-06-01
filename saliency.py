@@ -15,6 +15,16 @@ plt.rcParams['figure.figsize'] = (10.0, 8.0)  # set default size of plots
 plt.rcParams['image.interpolation'] = 'nearest'
 plt.rcParams['image.cmap'] = 'gray'
 
+NUM_CHARS = 24 + 41 + 24 + 32
+MODEL_SAVE_PATH = "models/model_combo.pth"
+DATA_PATH = "data/asl"
+model = ComboModel(NUM_CHARS)
+
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+checkpoint = torch.load(MODEL_SAVE_PATH)
+model.load_state_dict(checkpoint)
+# model.to(device)
+
 
 def preprocess(img, size=28):
     transform = T.Compose([
@@ -84,7 +94,7 @@ def compute_saliency_maps(X, y, model):
     correct_vals = correct_vals.backward()
     gradient = X.grad
     gradient = torch.abs(gradient)
-    saliency, indices = torch.max(gradient, 3)
+    saliency, _ = torch.max(gradient, 3)
 
     print(saliency.shape)
 
@@ -131,16 +141,6 @@ def show_saliency_maps(X, y):
         plt.gcf().set_size_inches(12, 5)
         # break
     plt.show()
-
-
-MODEL_SAVE_PATH = "models/model_basic_asl_letter.pth"
-DATA_PATH = "data/asl"
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-
-model = ASLModel()
-checkpoint = torch.load(MODEL_SAVE_PATH)
-model.load_state_dict(checkpoint)
-# model.to(device)
 
 
 def get_data():

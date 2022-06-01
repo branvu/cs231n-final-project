@@ -1,9 +1,12 @@
+from enum import unique
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
 import pandas as pd
 import cv2
 import numpy as np
 import torch
+
+lang_char_counts = {0: 24, 1: 41, 2: 24, 3: 32}
 
 
 class SignLanguageDataset(Dataset):
@@ -18,8 +21,11 @@ class SignLanguageDataset(Dataset):
             idx = idx.tolist()
         img = cv2.imread(self.data.iloc[idx, 0], cv2.IMREAD_GRAYSCALE)
         classifications = np.array(self.data.iloc[idx, 1:])
+        total = sum([lang_char_counts[i]
+                     for i in range(int(classifications[0]))])
+        unique_id = total + int(classifications[1])
         sample = {'image': img, 'language': int(
-            classifications[0]), 'letter': int(classifications[1])}
+            classifications[0]), 'letter': int(classifications[1]), 'unique_id': unique_id}
 
         if self.transform:
             sample = self.transform(sample)
