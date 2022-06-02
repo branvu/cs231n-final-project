@@ -1,29 +1,32 @@
 import torch
-import torchvision
 import torchvision.transforms as T
 import random
 import numpy as np
-from scipy.ndimage.filters import gaussian_filter1d
 import matplotlib.pyplot as plt
 from PIL import Image
 from models import *
 import os
 import cv2
 from preprocess_functions import *
+import argparse
 
 plt.rcParams['figure.figsize'] = (10.0, 8.0)  # set default size of plots
 plt.rcParams['image.interpolation'] = 'nearest'
 plt.rcParams['image.cmap'] = 'gray'
 
-NUM_CHARS = 24 + 41 + 24 + 32
-MODEL_SAVE_PATH = "models/model_combo.pth"
-DATA_PATH = "data/asl"
-model = ComboModel(NUM_CHARS)
+lang = "jsl"
 
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-checkpoint = torch.load(MODEL_SAVE_PATH)
-model.load_state_dict(checkpoint)
-# model.to(device)
+NUM_CHARS = 24 + 41 + 24 + 32
+NUM_LANGS = 4
+lang_char_counts = {0: 24, 1: 41, 2: 24, 3: 32}
+lang_id = {'asl': 0, 'jsl': 1, 'isl': 2, 'arsl': 3}
+DATA_PATH = f"data/{lang}"
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "mode", help=f"'lang', 'letter', or 'combo")
+args = parser.parse_args()
 
 
 def preprocess(img, size=28):
@@ -56,70 +59,22 @@ def compute_saliency_maps(X, y, model):
     X.requires_grad_()
 
     saliency = None
-    ##############################################################################
-    # TODO: Implement this function. Perform a forward and backward pass through #
-    # the model to compute the gradient of the correct class score with respect  #
-    # to each input image. You first want to compute the loss over the correct   #
-    # scores (we'll combine losses across a batch by summing), and then compute  #
-    # the gradients with a backward pass.                                        #
-    ##############################################################################
-    # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-    # forward pass
-    # X = X.to(device)
-    # scores = model(X)
-    # print(scores)
-    # # print(scores.shape) # torch.Size([5, 1000]) since 5 images, 1000 classes
-    # scores = (scores.gather(1, y.view(-1, 1)).squeeze())
-    # print(scores)
-    # # print(scores.shape) # torch.Size([5])
-
-    # # print(scores) #tensor([24.1313, 25.1475, 38.8825, 25.4514, 30.2723], grad_fn=<SqueezeBackward0>)
-
-    # # backward pass
-    # # https://stackoverflow.com/questions/43451125/pytorch-what-are-the-gradient-arguments
-    # # print(scores.shape[0]) # 5
-    # # print(torch.FloatTensor([1.0]*scores.shape[0])) # tensor([1., 1., 1., 1., 1.])
-    # scores.backward(torch.FloatTensor([1.0]*scores.shape[0]))
-
-    # print(X.grad.data.abs().shape)
-    # # saliency
-    # saliency, _ = torch.max(X.grad.data.abs(), dim=3)
 
     x = model(X)
-    print(x)
     correct_vals = x.gather(1, y.view(-1, 1)).squeeze()
-    print(correct_vals)
     correct_vals = correct_vals.sum()
     correct_vals = correct_vals.backward()
     gradient = X.grad
     gradient = torch.abs(gradient)
     saliency, _ = torch.max(gradient, 3)
 
-    print(saliency.shape)
-
-    # torch.max(input, dim, keepdim=False, out=None) -> (Tensor, LongTensor)
-
-    # Returns a namedtuple (values, indices) where values is the maximum value of each row of the input tensor
-    # in the given dimension dim. And indices is the index location of each maximum value found (argmax).
-    # If keepdim is True, the output tensors are of the same size as input except in the dimension dim
-    # where they are of size 1. Otherwise, dim is squeezed (see torch.squeeze()),
-    # resulting in the output tensors having 1 fewer dimension than input.
-
-    # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-    ##############################################################################
-    #                             END OF YOUR CODE                               #
-    ##############################################################################
     return saliency
 
 
-def show_saliency_maps(X, y):
+def show_saliency_maps(X, y, model, total):
     # Convert X and y from numpy arrays to Torch Tensors
     X_tensor = torch.cat([preprocess(Image.fromarray(x)) for x in X], dim=0)
     y_tensor = torch.LongTensor(y)
-
-    # X_tensor = X_tensor.to(device)
-    # y_tensor = y_tensor.to(device)
 
     # Compute saliency maps for images in X
     saliency = compute_saliency_maps(X_tensor, y_tensor, model)
@@ -128,43 +83,78 @@ def show_saliency_maps(X, y):
     # and saliency maps together.
     saliency = saliency.numpy()
     N = X.shape[0]
-    print(N)
     for i in range(N):
         plt.subplot(2, N, i + 1)
         plt.imshow(resize(100, 100, X[i]))
         plt.axis('off')
-        plt.title(y[i])
+        if args.mode == "lang":
+            title = lang
+        else:
+            title = y[i] - total
+            if lang == "asl":
+                title = chr(ord('A') + y[i])
+
+        plt.title(title)
         plt.subplot(2, N, N + i + 1)
         plt.imshow(saliency[i], cmap=plt.cm.hot)
-        # print(saliency[i])
         plt.axis('off')
         plt.gcf().set_size_inches(12, 5)
-        # break
     plt.show()
 
 
 def get_data():
     images_list = os.listdir(DATA_PATH)
     images = random.sample(images_list, 5)
-    # images = images_list[6000:6000+5]
     y = []
     X = []
+    if args.mode == "combo":
+        total = sum([lang_char_counts[i]
+                     for i in range(int(lang_id[lang]))])
+    else:
+        total = 0
+
     for i in images:
         orig_img = cv2.imread(DATA_PATH + "/" + i)
         img = grayscale(
             resize(FINAL_IMAGE_SIZE, FINAL_IMAGE_SIZE, orig_img))
-        # img = img[None, :, :, None]
-        # print(img)
         X.append(np.array(img))
-        y.append(int(i[4]))
+        if args.mode == "lang":
+            correct_val = lang_id[lang]
+        else:
+            correct_val = total + int(i.split('-')[1])
+        y.append(correct_val)
     X = np.array(X)
     y = np.array(y)
-    print(y)
-    return X, y
+    return X, y, total
 
 
-X, y = get_data()
+def main():
+    if args.mode == "combo":
+        MODEL_SAVE_PATH = "models\model_combo.pth"
+        model = ComboModel(NUM_CHARS)
+    elif args.mode == "lang":
+        MODEL_SAVE_PATH = "models\model_basic.pth"
+        model = LanguageModel(NUM_LANGS)
+    else:
+        MODEL_SAVE_PATH = f"models\model_basic_{lang}_letter.pth"
+        if lang == "asl":
+            model = ASLModel()
+        elif lang == "jsl":
+            model = JSLModel()
+        elif lang == "isl":
+            model = ISLModel()
+        elif lang == "arsl":
+            model = ARSLModel()
+        else:
+            raise Exception("Invalid language")
 
-# print(X)
-# print(y)
-show_saliency_maps(X, y)
+    checkpoint = torch.load(MODEL_SAVE_PATH)
+    model.load_state_dict(checkpoint)
+
+    X, y, total = get_data()
+
+    show_saliency_maps(X, y, model, total)
+
+
+if __name__ == "__main__":
+    main()

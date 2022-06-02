@@ -51,7 +51,7 @@ def train(model, optimizer, epochs=1):
             model.train()  # set model to train mode
 
             # move to device (GPU)
-            inputs, language, letter = data
+            inputs, language, letter, _ = data
             inputs = data[inputs][:, :, :, None].to(device)
             language = data[language].to(device)
             letter = data[letter].to(device)
@@ -96,7 +96,7 @@ def check_accuracy(loader, model):
     with torch.no_grad():
         for data in loader:
             # move to device
-            inputs, language, _ = data
+            inputs, language, _, _ = data
             inputs = data[inputs][:, :, :, None].to(device)
             language = data[language].to(device)
 

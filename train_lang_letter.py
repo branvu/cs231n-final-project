@@ -12,7 +12,7 @@ from models import ComboModel
 MODIFY CONSTANTS AS NEEDED
 '''
 BATCH_SIZE = 10
-EPOCHS = 2
+EPOCHS = 1
 NUM_CHARS = 24 + 41 + 24 + 32
 ANNOTATIONS = "annotations/annotations.csv"
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -119,7 +119,11 @@ transform = T.Compose([
 
     # create model
     model = ComboModel(NUM_CHARS)
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    MODEL_SAVE_PATH = "models/model_combo.pth"
+    checkpoint = torch.load(MODEL_SAVE_PATH)
+    # model.load_state_dict(checkpoint)
+
+    optimizer = optim.Adam(model.parameters(), lr=0.0001, weight_decay=1e-4)
 
     print("Start training")
     print("="*50, "\n")
