@@ -13,7 +13,7 @@ MODIFY CONSTANTS AS NEEDED
 '''
 BATCH_SIZE = 10
 EPOCHS = 1
-NUM_CHARS = 24 + 41 + 24 + 32
+NUM_CHARS = 26 + 41 + 26 + 32
 ANNOTATIONS = "annotations/annotations.csv"
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -52,7 +52,7 @@ def train(model, optimizer, epochs=1):
             model.train()  # set model to train mode
 
             # move to device (GPU)
-            inputs, _, _, unique_id = data
+            inputs, language, letter, unique_id = data
             inputs = data[inputs][:, :, :, None].to(device)
             unique_id = data[unique_id].to(device)
             # print(inputs, language, letter, unique_id)
@@ -122,6 +122,19 @@ transform = T.Compose([
     MODEL_SAVE_PATH = "models/model_combo.pth"
     checkpoint = torch.load(MODEL_SAVE_PATH)
     # model.load_state_dict(checkpoint)
+
+    # model2 = ComboModel(NUM_CHARS - 4)
+    # model2.load_state_dict(checkpoint)
+    # model.c1.weight = model2.c1.weight
+    # model.c1.bias = model2.c1.bias
+    # model.c2.weight = model2.c2.weight
+    # model.c2.bias = model2.c2.bias
+    # model.c3.weight = model2.c3.weight
+    # model.c3.bias = model2.c3.bias
+    # model.linear1.weight = model2.linear1.weight
+    # model.linear1.bias = model2.linear1.bias
+
+    # return
 
     optimizer = optim.Adam(model.parameters(), lr=0.0001, weight_decay=1e-4)
 

@@ -131,7 +131,7 @@ def create_class_visualization(target_y, model, dtype, **kwargs):
     return deprocess(img.data.cpu())
 
 
-NUM_CHARS = 24 + 41 + 24 + 32
+NUM_CHARS = 26 + 41 + 26 + 32
 
 dtype = torch.FloatTensor
 MODEL_SAVE_PATH = "models\model_combo.pth"

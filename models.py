@@ -33,7 +33,7 @@ class ASLModel(nn.Module):
         self.c2 = nn.Conv2d(32, 64, kernel_size=(3, 3))
         self.c3 = nn.Conv2d(64, 32, kernel_size=(3, 3))
         self.linear1 = nn.Linear(288, 100)
-        self.linear2 = nn.Linear(100, 41)
+        self.linear2 = nn.Linear(100, 26)
         self.drop = nn.Dropout(p=0.2)
 
     def forward(self, x):
@@ -200,6 +200,42 @@ class ComboModel(nn.Module):
         x = torch.flatten(x, 1)
         # print(x.shape)
         x = F.relu(self.linear1(x))
+        # print(x.shape)
+        x = self.linear2(x)
+        return x
+
+
+class ComboModel(nn.Module):
+    def __init__(self, num_chars):
+        super().__init__()
+        self.c1 = nn.Conv2d(1, 32, kernel_size=(3, 3), padding=1)
+        self.c2 = nn.Conv2d(32, 64, kernel_size=(3, 3), padding=1)
+        self.c3 = nn.Conv2d(64, 64, kernel_size=(3, 3), padding=1)
+        self.c3_batchnorm = nn.BatchNorm2d(64)
+        self.pool = nn.MaxPool2d(2, 2)
+        self.linear1 = nn.Linear(576, 200)
+        self.linear2 = nn.Linear(200, num_chars)
+        self.drop = nn.Dropout(p=0.5)
+
+    def forward(self, x):
+        x = x.float()
+        x = x.permute(0, 3, 1, 2)
+        x = (F.relu(self.c1(x)))
+        # print(x.shape)
+        x = self.pool(x)
+        # print(x.shape)
+        x = F.relu(self.c2(x))
+        # print(x.shape)
+        x = self.pool(x)
+        # print(x.shape)
+        x = F.relu(self.c3_batchnorm(self.c3(x)))
+        # print(x.shape)
+        x = self.pool(x)
+        # print(x.shape)
+        x = self.drop(x)
+        x = torch.flatten(x, 1)
+        # print(x.shape)
+        x = self.linear1(x)
         # print(x.shape)
         x = self.linear2(x)
         return x

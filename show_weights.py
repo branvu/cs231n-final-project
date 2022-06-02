@@ -9,7 +9,7 @@ from builtins import range
 from math import sqrt, ceil
 import numpy as np
 
-NUM_CHARS = 24 + 41 + 24 + 32
+NUM_CHARS = 26 + 41 + 26 + 32
 MODEL_SAVE_PATH = "models/model_combo.pth"
 image_file = "data/asl/asl-5-3629.jpg"
 model = ComboModel(NUM_CHARS)

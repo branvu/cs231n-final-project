@@ -14,9 +14,9 @@ plt.rcParams['figure.figsize'] = (10.0, 8.0)  # set default size of plots
 plt.rcParams['image.interpolation'] = 'nearest'
 plt.rcParams['image.cmap'] = 'gray'
 
-lang = "jsl"
+lang = "asl"
 
-NUM_CHARS = 24 + 41 + 24 + 32
+NUM_CHARS = 26 + 41 + 26 + 32
 NUM_LANGS = 4
 lang_char_counts = {0: 24, 1: 41, 2: 24, 3: 32}
 lang_id = {'asl': 0, 'jsl': 1, 'isl': 2, 'arsl': 3}

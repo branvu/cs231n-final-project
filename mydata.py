@@ -6,7 +6,7 @@ import cv2
 import numpy as np
 import torch
 
-lang_char_counts = {0: 24, 1: 41, 2: 24, 3: 32}
+lang_char_counts = {0: 26, 1: 41, 2: 26, 3: 32}
 
 
 class SignLanguageDataset(Dataset):

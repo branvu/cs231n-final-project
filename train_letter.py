@@ -15,7 +15,7 @@ MODIFY CONSTANTS AS NEEDED
 BATCH_SIZE = 10
 EPOCHS = 3
 ANNOTATIONS_DIR = "annotations"
-NUM_CLASSES = {"asl": 26, "isl": 26, "jsl": 41}
+NUM_CLASSES = {"asl": 26, "isl": 26, "jsl": 41, "arsl": 32}
 
 # parse argument of language to train
 available_langs = [x.split('_')[0] for x in os.listdir(ANNOTATIONS_DIR)[1:]]
@@ -63,7 +63,7 @@ def train(model, optimizer, epochs=1):
             model.train()  # set model to train mode
 
             # move to device (GPU)
-            inputs, language, letter = data
+            inputs, language, letter, _ = data
 
             inputs = data[inputs][:, :, :, None].to(device)
             language = data[language].to(device)
@@ -98,7 +98,7 @@ def check_accuracy(loader, model):
     with torch.no_grad():
         for data in loader:
             # move to device
-            inputs, _, letter = data
+            inputs, _, letter, _ = data
             inputs = data[inputs][:, :, :, None].to(device)
             letter = data[letter].to(device)
 

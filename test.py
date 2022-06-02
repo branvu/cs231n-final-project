@@ -1,19 +1,10 @@
 import pandas as pd
+import cv2
+from preprocess_functions import *
 
 # data = pd.read_csv('annotations.csv')
 # print(data)
 # print(data['0'])
-
-
-labels = {}
-
-for i in range(26):
-    labels[i] = i
-
-labels[9] = 100000
-labels[25] = 100000
-
-for i in range(10, 25):
-    labels[i] -= 1
-
-print(labels)
+img = cv2.imread("hand identifier.png")
+cv2.imwrite("hand_cropped.png", grayscale(resize(100, 100, img)))
+cv2.waitKey(0)
